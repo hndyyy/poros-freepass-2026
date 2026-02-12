@@ -1,0 +1,90 @@
+stages:
+  - test
+  - build
+  - push
+  - deploy
+
+variables:
+  DOCKER_IMAGE: "${DOCKER_USERNAME}/taskflow-backend"
+  # Menggunakan logic tag berdasarkan branch seperti di file github action kamu
+  IMAGE_TAG: $CI_COMMIT_REF_SLUG 
+
+# Global Configuration untuk Runner Sendiri
+default:
+  tags:
+    - self-hosted # Ganti dengan tag runner kamu
+
+# ----------------------------------------------------------------
+# TEST STAGE
+# ----------------------------------------------------------------
+backend_test:
+  stage: test
+  image: node:20 # Menggunakan image node sesuai package.json kamu
+  script:
+    - npm install
+    - npx prisma generate
+    # Menjalankan test. Pipeline akan gagal otomatis jika exit code != 0
+    - npm test 
+  only:
+    - main
+    - development
+
+# ----------------------------------------------------------------
+# BUILD STAGE
+# ----------------------------------------------------------------
+build_image:
+  stage: build
+  script:
+    # Menentukan Dockerfile berdasarkan branch (logika dari runner-github.yaml)
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
+        DOCKERFILE="./Dockerfile-api-prod"
+      else
+        DOCKERFILE="./Dockerfile-api"
+      fi
+    # Build container secara otomatis di pipeline
+    - docker build -t $DOCKER_IMAGE:$IMAGE_TAG -f $DOCKERFILE .
+  needs: ["backend_test"]
+
+# ----------------------------------------------------------------
+# PUSH IMAGE STAGE
+# ----------------------------------------------------------------
+push_registry:
+  stage: push
+  before_script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  script:
+    - docker push $DOCKER_IMAGE:$IMAGE_TAG
+  needs: ["build_image"]
+
+# ----------------------------------------------------------------
+# DEPLOY STAGE
+# ----------------------------------------------------------------
+deploy_to_server:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    # Install ssh-agent jika belum ada (untuk koneksi ke server Debian/Proxmox kamu)
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SERVER_SSH_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    # Menghindari prompt yes/no saat pertama kali konek
+    - ssh-keyscan $SERVER_HOST >> ~/.ssh/known_hosts
+  script:
+    - |
+      ssh $SERVER_USER@$SERVER_HOST "
+        cd /home/hris &&
+        echo 'Pulling latest image...' &&
+        docker compose pull backend &&
+        echo 'Updating service...' &&
+        docker compose up -d --remove-orphans backend &&
+        echo 'Checking container status...' &&
+        docker ps | grep backend
+      "
+  environment:
+    name: production
+  only:
+    - main
+  needs: ["push_registry"]
