@@ -1,0 +1,5 @@
+{
+  "name": "TaskFlow AI",
+  "description": "A smart, simple task management application enhanced with Gemini AI for subtask generation and prioritization.",
+  "requestFramePermissions": []
+}
