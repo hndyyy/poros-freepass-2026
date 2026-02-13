@@ -66,6 +66,9 @@ jobs:
         run: |
           # Set env vars for docker-compose
           export BACKEND_IMAGE="${{ secrets.BACKEND_IMAGE_TAG }}"
+          export FRONTEND_IMAGE="${{ secrets.FRONTEND_IMAGE_TAG }}"
+          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+          export DB_NAME="${{ secrets.DB_NAME }}"
           
           # Start Backend & DB
           docker compose up -d backend
@@ -134,5 +137,7 @@ jobs:
         run: |
           export BACKEND_IMAGE="${{ secrets.BACKEND_IMAGE_TAG }}"
           export FRONTEND_IMAGE="${{ secrets.FRONTEND_IMAGE_TAG }}"
+          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+          export DB_NAME="${{ secrets.DB_NAME }}"
           docker --context remote-client compose up -d
           
