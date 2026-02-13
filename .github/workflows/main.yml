@@ -1,90 +1,145 @@
-stages:
-  - test
-  - build
-  - push
-  - deploy
+name: application
 
-variables:
-  DOCKER_IMAGE: "${DOCKER_USERNAME}/taskflow-backend"
-  # Menggunakan logic tag berdasarkan branch seperti di file github action kamu
-  IMAGE_TAG: $CI_COMMIT_REF_SLUG 
+on:
+  push:
+    branches:
+      - main
 
-# Global Configuration untuk Runner Sendiri
-default:
-  tags:
-    - self-hosted # Ganti dengan tag runner kamu
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: self-hosted
+    steps:
+      - name: Clone Code
+        uses: actions/checkout@v3
 
-# ----------------------------------------------------------------
-# TEST STAGE
-# ----------------------------------------------------------------
-backend_test:
-  stage: test
-  image: node:20 # Menggunakan image node sesuai package.json kamu
-  script:
-    - npm install
-    - npx prisma generate
-    # Menjalankan test. Pipeline akan gagal otomatis jika exit code != 0
-    - npm test 
-  only:
-    - main
-    - development
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-# ----------------------------------------------------------------
-# BUILD STAGE
-# ----------------------------------------------------------------
-build_image:
-  stage: build
-  script:
-    # Menentukan Dockerfile berdasarkan branch (logika dari runner-github.yaml)
-    - |
-      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
-        DOCKERFILE="./Dockerfile-api-prod"
-      else
-        DOCKERFILE="./Dockerfile-api"
-      fi
-    # Build container secara otomatis di pipeline
-    - docker build -t $DOCKER_IMAGE:$IMAGE_TAG -f $DOCKERFILE .
-  needs: ["backend_test"]
+      - name: Create .env files
+        run: |
+          echo "PORT=${{ secrets.PORT }}" >> backend/.env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> backend/.env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> backend/.env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> backend/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> backend/.env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> backend/.env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> backend/.env
+          
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> frontend/.env
 
-# ----------------------------------------------------------------
-# PUSH IMAGE STAGE
-# ----------------------------------------------------------------
-push_registry:
-  stage: push
-  before_script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  script:
-    - docker push $DOCKER_IMAGE:$IMAGE_TAG
-  needs: ["build_image"]
+      - name: Build Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          load: true
+          tags: ${{ secrets.BACKEND_IMAGE_TAG }}
+          provenance: false
+          sbom: false
 
-# ----------------------------------------------------------------
-# DEPLOY STAGE
-# ----------------------------------------------------------------
-deploy_to_server:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    # Install ssh-agent jika belum ada (untuk koneksi ke server Debian/Proxmox kamu)
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SERVER_SSH_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    # Menghindari prompt yes/no saat pertama kali konek
-    - ssh-keyscan $SERVER_HOST >> ~/.ssh/known_hosts
-  script:
-    - |
-      ssh $SERVER_USER@$SERVER_HOST "
-        cd /home/hris &&
-        echo 'Pulling latest image...' &&
-        docker compose pull backend &&
-        echo 'Updating service...' &&
-        docker compose up -d --remove-orphans backend &&
-        echo 'Checking container status...' &&
-        docker ps | grep backend
-      "
-  environment:
-    name: production
-  only:
-    - main
-  needs: ["push_registry"]
+      - name: Build Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: ${{ secrets.FRONTEND_IMAGE_TAG }}
+          provenance: false
+          sbom: false
+
+  test:
+    name: test
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Clone Code
+        uses: actions/checkout@v3
+
+      - name: Start Service & Verify
+        run: |
+          # Set env vars for docker-compose
+          export BACKEND_IMAGE="${{ secrets.BACKEND_IMAGE_TAG }}"
+          
+          # Start Backend & DB
+          docker compose up -d backend
+          
+          # Wait for startup
+          echo "Waiting for backend to start..."
+          sleep 15
+          
+          # Check Health
+          echo "Checking health..."
+          if curl -f http://localhost:3000/api/health; then
+            echo "Health check passed!"
+          else
+            echo "Health check failed!"
+            docker compose logs backend
+            exit 1
+          fi
+          
+          # Cleanup
+          docker compose down
+      
+  push:
+    name: push to registry 
+    runs-on: self-hosted
+    needs: [jobs, test]
+    steps:
+      - name: login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.BACKEND_IMAGE_TAG }}
+          provenance: false
+          sbom: false
+
+      - name: Push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.FRONTEND_IMAGE_TAG }}
+          provenance: false
+          sbom: false
+      
+      - name: cleanup
+        runs-on: self-hosted
+        steps:
+          - name: cleanup
+            run: |
+              docker image prune -a -f
+              docker system prune -a -f
+
+  deploy:
+    name: Deploy to Server
+    runs-on: self-hosted
+    needs: [build, test, push]
+    if: github.ref_name == 'main' 
+    steps:
+      - name: Deploy via Docker Compose
+        run: |
+          # Berpindah ke folder deployment di server Debian/Proxmox kamu
+          cd /home/hris 
+          
+          # Tarik image terbaru dari registry
+          docker compose pull backend
+          
+          # Jalankan ulang service saja (tidak membangun ulang dari source)
+          docker compose up -d --remove-orphans backend
+          
+          # Verifikasi apakah aplikasi benar-benar berjalan
+          docker ps | grep backend

@@ -11,6 +11,16 @@ services:
     networks:
       - taskflow_network
 
+  backend:
+    image: ${BACKEND_IMAGE}
+    env_file: ./backend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    networks:
+      - taskflow_network
+
 networks:
   taskflow_network:
     driver: bridge
