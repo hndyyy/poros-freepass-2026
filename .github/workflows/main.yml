@@ -125,7 +125,6 @@ jobs:
           docker system prune -a -f
 
   deploy:
-  deploy:
     name: Deploy to Server
     runs-on: self-hosted
     needs: push
