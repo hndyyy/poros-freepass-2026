@@ -129,18 +129,10 @@ jobs:
     runs-on: self-hosted
     needs: push
     environment: poros-freepass
-    if: github.ref_name == 'main' 
     steps:
-      - name: Deploy via Docker Compose
+      - name: Deploy via Docker Context
         run: |
-          # Berpindah ke folder deployment di server Debian/Proxmox kamu
-          cd /home/hris 
+          export BACKEND_IMAGE="${{ secrets.BACKEND_IMAGE_TAG }}"
+          export FRONTEND_IMAGE="${{ secrets.FRONTEND_IMAGE_TAG }}"
+          docker --context remote-client compose up -d
           
-          # Tarik image terbaru dari registry
-          docker compose pull backend
-          
-          # Jalankan ulang service saja (tidak membangun ulang dari source)
-          docker compose up -d --remove-orphans backend
-          
-          # Verifikasi apakah aplikasi benar-benar berjalan
-          docker ps | grep backend
