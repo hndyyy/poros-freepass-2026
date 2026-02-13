@@ -116,13 +116,10 @@ jobs:
           provenance: false
           sbom: false
       
-      - name: cleanup
-        runs-on: self-hosted
-        steps:
-          - name: cleanup
-            run: |
-              docker image prune -a -f
-              docker system prune -a -f
+      - name: cleanup cache & image
+        run: |
+          docker image prune -a -f
+          docker system prune -a -f
 
   deploy:
     name: Deploy to Server
