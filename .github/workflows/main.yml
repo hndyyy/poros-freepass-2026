@@ -151,20 +151,6 @@ jobs:
     needs: push
     environment: poros-freepass
     steps:
-      - name: Create .env files
-        run: |
-          # Backend .env
-          echo "PORT=${{ secrets.PORT }}" >> backend/.env
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> backend/.env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> backend/.env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> backend/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> backend/.env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> backend/.env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> backend/.env
-          
-          # Frontend .env
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> frontend/.env
-
       - name: Deploy via Docker Context
         run: |
           export BACKEND_IMAGE="${{ secrets.BACKEND_IMAGE_TAG }}"
