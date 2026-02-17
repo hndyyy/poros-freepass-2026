@@ -3,7 +3,7 @@ import { getCurrentUser } from './authService';
 
 // This simulates an environment variable for the backend URL
 // In a real app, this would be defined in .env
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://backend:3000/api';
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
