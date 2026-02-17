@@ -79,7 +79,7 @@ jobs:
           export DATABASE_URL="${{ secrets.DATABASE_URL }}"
           export DB_HOST="${{ secrets.DB_HOST }}"
           export DB_PORT="${{ secrets.DB_PORT }}"
-          export BACKEND_PORT="${{ secrets.BACKEND_PORT }}"
+          export BACKEND_PORT="${{ secrets.PORT }}"
           export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
           
           # Start Backend & DB
