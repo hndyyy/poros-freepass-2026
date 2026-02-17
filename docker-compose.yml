@@ -20,7 +20,7 @@ services:
     volumes:
       - backend-data:/var/www/html
     depends_on:
-      - mysql
+      - database
     networks:
       - taskflow_network
 
