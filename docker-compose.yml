@@ -11,7 +11,7 @@ services:
       - taskflow_network
     volumes:
       - mysql-data:/var/lib/mysql
-      - mysql-conf:/etc/mysql
+      # - mysql-conf:/etc/mysql # Optional, if you don't need custom config persistence
 
   backend:
     image: ${BACKEND_IMAGE}
@@ -25,8 +25,8 @@ services:
       - DB_NAME=${DB_NAME}
     ports:
       - "${PORT}:3000"
-    volumes:
-      - backend-data:/var/www/html
+    # volumes:
+    #   - backend-data:/var/www/html
     depends_on:
       - database
     networks:
@@ -36,9 +36,9 @@ services:
     image: ${FRONTEND_IMAGE}
     ports:
       - "${FRONTEND_PORT}:80"
-    volumes:
-      - frontend-data:/var/www/html
-      - nginx-conf:/etc/nginx
+    # volumes:
+    #   - frontend-data:/var/www/html
+    #   - nginx-conf:/etc/nginx
     depends_on:
       - backend
     networks:
@@ -49,8 +49,8 @@ networks:
     driver: bridge
 
 volumes:
-  frontend-data:
-  backend-data:
-  nginx-conf:
+  # frontend-data:
+  # backend-data:
+  # nginx-conf:
   mysql-data:
   mysql-conf:
