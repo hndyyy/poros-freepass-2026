@@ -32,6 +32,9 @@ jobs:
           
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> frontend/.env
 
+          cat backend/.env
+          cat frontend/.env
+          
       - name: Build Backend
         uses: docker/build-push-action@v6
         with:
