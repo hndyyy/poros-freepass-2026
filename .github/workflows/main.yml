@@ -53,6 +53,13 @@ jobs:
           provenance: false
           sbom: false
 
+      - name: Failure Cleanup
+        if: failure()
+        run: |
+          docker compose down || true
+          docker image prune -a -f || true
+          docker builder prune -f || true
+
   test:
     name: test
     runs-on: self-hosted
@@ -103,6 +110,13 @@ jobs:
           
           # Cleanup
           docker compose down
+
+      - name: Failure Cleanup
+        if: failure()
+        run: |
+          docker compose down || true
+          docker image prune -a -f || true
+          docker builder prune -f || true
       
   push:
     name: push to registry 
@@ -141,6 +155,13 @@ jobs:
           docker image prune -a -f
           docker system prune -a -f
 
+      - name: Failure Cleanup
+        if: failure()
+        run: |
+          docker compose down || true
+          docker image prune -a -f || true
+          docker builder prune -f || true
+
   deploy:
     name: Deploy to Server
     runs-on: self-hosted
@@ -168,4 +189,11 @@ jobs:
           export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
           export DB_NAME="${{ secrets.DB_NAME }}"
           docker --context remote-client compose up -d
+          
+      - name: Failure Cleanup
+        if: failure()
+        run: |
+          docker compose down || true
+          docker image prune -a -f || true
+          docker builder prune -f || true
           

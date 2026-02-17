@@ -2,8 +2,8 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: $DB_PASSWORD
-      MYSQL_DATABASE: $DB_NAME
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: stock_db
     ports:
       - "3306:3306"
     networks:
@@ -45,5 +45,5 @@ volumes:
   frontend-data:
   backend-data:
   nginx-conf:
-  mysql-data:
-  mysql-conf:
+    mysql-data:
+    mysql-conf:
