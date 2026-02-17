@@ -1,7 +1,7 @@
 import { User } from '../types';
 
 // Simulate backend URL from env
-const API_URL = import.meta.env.VITE_API_URL || 'http://backend:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const AUTH_KEY = 'taskflow_auth_user';
 
 // Helper to simulate network delay
