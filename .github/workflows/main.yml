@@ -91,7 +91,7 @@ jobs:
           
           # Check Health
           echo "Checking health..."
-          if curl -f http://localhost:${BACKEND_PORT:-3000}/api/health; then
+          if curl -f http://localhost:3000/api/health; then
             echo "Health check passed!"
           else
             echo "Health check failed!"
