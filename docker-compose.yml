@@ -45,5 +45,5 @@ volumes:
   frontend-data:
   backend-data:
   nginx-conf:
-    mysql-data:
-    mysql-conf:
+  mysql-data:
+  mysql-conf:
