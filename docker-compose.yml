@@ -17,7 +17,7 @@ services:
     image: ${BACKEND_IMAGE}
     env_file: ./backend/.env
     ports:
-      - "${BACKEND_HOST_PORT:-3000}:3000"
+      - "3000:3000"
     volumes:
       - backend-data:/var/www/html
     depends_on:
@@ -29,7 +29,7 @@ services:
     image: ${FRONTEND_IMAGE}
     env_file: ./frontend/.env
     ports:
-      - "${FRONTEND_HOST_PORT:-25515}:80"
+      - "80:80"
     volumes:
       - frontend-data:/var/www/html
       - nginx-conf:/etc/nginx
