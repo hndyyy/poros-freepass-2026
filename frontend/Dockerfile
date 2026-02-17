@@ -1,6 +1,7 @@
 FROM node:20-alpine3.20 as builder
 ENV DEBIAN_FRONTEND=noninteractive
-
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 WORKDIR /app
 COPY . /app
 RUN npm install

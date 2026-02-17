@@ -50,6 +50,8 @@ jobs:
           file: ./frontend/Dockerfile
           push: false
           tags: ${{ secrets.FRONTEND_IMAGE_TAG }}
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
           provenance: false
           sbom: false
 
@@ -154,16 +156,18 @@ jobs:
     needs: push
     environment: poros-freepass
     steps:
+      - name: Clone Code
+        uses: actions/checkout@v3
+
       - name: Deploy via Docker Context
         run: |
           export BACKEND_IMAGE="${{ secrets.BACKEND_IMAGE_TAG }}"
           export FRONTEND_IMAGE="${{ secrets.FRONTEND_IMAGE_TAG }}"
           export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
           export DB_NAME="${{ secrets.DB_NAME }}"
-          export DB_PORT="${{ secrets.DB_PORT }}"
-          export BACKEND_PORT="${{ secrets.PORT }}"
-          export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
-          docker --context remote-client compose down
+          export DB_USER="${{ secrets.DB_USER }}"
+          export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          
           docker --context remote-client compose up -d
           
       - name: Failure Cleanup
