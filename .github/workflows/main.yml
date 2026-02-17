@@ -73,6 +73,9 @@ jobs:
           export FRONTEND_IMAGE="${{ secrets.FRONTEND_IMAGE_TAG }}"
           export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
           export DB_NAME="${{ secrets.DB_NAME }}"
+          export DB_PORT="${{ secrets.DB_PORT }}"
+          export BACKEND_PORT="${{ secrets.BACKEND_PORT }}"
+          export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
           
           # Start Backend & DB
           docker compose up -d backend
@@ -83,7 +86,7 @@ jobs:
           
           # Check Health
           echo "Checking health..."
-          if curl -f http://localhost:3000/api/health; then
+          if curl -f http://localhost:${BACKEND_PORT:-3000}/api/health; then
             echo "Health check passed!"
           else
             echo "Health check failed!"
@@ -157,6 +160,9 @@ jobs:
           export FRONTEND_IMAGE="${{ secrets.FRONTEND_IMAGE_TAG }}"
           export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
           export DB_NAME="${{ secrets.DB_NAME }}"
+          export DB_PORT="${{ secrets.DB_PORT }}"
+          export BACKEND_PORT="${{ secrets.BACKEND_PORT }}"
+          export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
           docker --context remote-client compose up -d
           
       - name: Failure Cleanup
