@@ -5,7 +5,7 @@ services:
       MYSQL_ROOT_PASSWORD: $DB_PASSWORD
       MYSQL_DATABASE: $DB_NAME
     ports:
-      - "${DB_PORT:-33060}:3306"
+      - "${DB_HOST_PORT:-3306}:3306"
     networks:
       - taskflow_network
     volumes:
@@ -16,7 +16,7 @@ services:
     image: ${BACKEND_IMAGE}
     env_file: ./backend/.env
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "${BACKEND_HOST_PORT:-3000}:3000"
     volumes:
       - backend-data:/var/www/html
     depends_on:
@@ -28,7 +28,7 @@ services:
     image: ${FRONTEND_IMAGE}
     env_file: ./frontend/.env
     ports:
-      - "${FRONTEND_PORT:-25515}:80"
+      - "${FRONTEND_HOST_PORT:-25515}:80"
     volumes:
       - frontend-data:/var/www/html
       - nginx-conf:/etc/nginx

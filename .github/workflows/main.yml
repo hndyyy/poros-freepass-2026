@@ -163,6 +163,7 @@ jobs:
           export DB_PORT="${{ secrets.DB_PORT }}"
           export BACKEND_PORT="${{ secrets.BACKEND_PORT }}"
           export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
+          docker --context remote-client compose down
           docker --context remote-client compose up -d
           
       - name: Failure Cleanup
