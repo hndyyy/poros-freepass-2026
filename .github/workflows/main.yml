@@ -75,6 +75,9 @@ jobs:
           export FRONTEND_IMAGE="${{ secrets.FRONTEND_IMAGE_TAG }}"
           export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
           export DB_NAME="${{ secrets.DB_NAME }}"
+          export DB_USER="${{ secrets.DB_USER }}"
+          export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          export DB_HOST="${{ secrets.DB_HOST }}"
           export DB_PORT="${{ secrets.DB_PORT }}"
           export BACKEND_PORT="${{ secrets.BACKEND_PORT }}"
           export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
@@ -167,6 +170,10 @@ jobs:
           export DB_NAME="${{ secrets.DB_NAME }}"
           export DB_USER="${{ secrets.DB_USER }}"
           export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          export DB_PORT="${{ secrets.DB_PORT }}"
+          export PORT="${{ secrets.PORT }}"
+          export DB_HOST="${{ secrets.DB_HOST }}"
+          export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
           
           docker --context remote-client compose up -d
           
