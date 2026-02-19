@@ -182,9 +182,6 @@ jobs:
           export DB_HOST="${{ secrets.DB_HOST }}"
           export FRONTEND_PORT="${{ secrets.FRONTEND_PORT }}"
 
-          #makesure api url
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> /home/.env
-
           docker --context remote-client compose pull
           docker --context remote-client compose up -d
           
